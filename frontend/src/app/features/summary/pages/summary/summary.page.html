@@ -1,0 +1,138 @@
+<section class="summary-page">
+  <div class="page-header">
+    <div>
+      <h1>Resumen de horas trabajadas</h1>
+      <p class="page-subtitle">
+        Consulta tus jornadas cerradas, revisa el desglose diario y exporta el informe en PDF.
+      </p>
+    </div>
+  </div>
+
+  <section class="filters-card card">
+    <div class="filters-card-header">
+      <div>
+        <h2>Consulta de resumen</h2>
+        <p>Selecciona el rango de fechas que quieres revisar.</p>
+      </div>
+
+      <div class="top-actions top-actions-split">
+        <button class="secondary-btn action-btn" type="button" (click)="exportPdf()"
+          [disabled]="!summary || summary.days.length === 0">
+          Exportar PDF
+        </button>
+
+        <button class="primary-btn action-btn" type="button" (click)="downloadCsv()"
+          [disabled]="!summary || summary.days.length === 0">
+          Descargar CSV
+        </button>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="date-field">
+        <label for="fromDate">Desde</label>
+        <input id="fromDate" type="date" [(ngModel)]="fromDate">
+      </div>
+
+      <div class="date-field">
+        <label for="toDate">Hasta</label>
+        <input id="toDate" type="date" [(ngModel)]="toDate">
+      </div>
+
+      <div class="filter-action">
+        <button class="primary-btn" type="button" (click)="loadSummary()" [disabled]="loading">
+          {{ loading ? 'Consultando...' : 'Consultar resumen' }}
+        </button>
+      </div>
+    </div>
+
+    <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+  </section>
+
+  <p *ngIf="loading" class="loading-text">Consultando resumen...</p>
+
+  <div id="pdf-content" class="pdf-content">
+    <section class="pdf-header card" *ngIf="summary">
+      <h2>Informe de horas trabajadas</h2>
+      <p class="pdf-subtitle">Aplicación de control horario</p>
+
+      <div class="pdf-meta">
+        <p><strong>Desde:</strong> {{ formatInputDate(fromDate) }}</p>
+        <p><strong>Hasta:</strong> {{ formatInputDate(toDate) }}</p>
+        <p><strong>Fecha de generación:</strong> {{ todayForPdf }}</p>
+      </div>
+    </section>
+
+    <section *ngIf="summary" class="summary-container">
+      <div class="summary-days card">
+        <div class="section-title">
+          <h2>Desglose por día</h2>
+          <p>Detalle de jornadas registradas en el periodo consultado.</p>
+        </div>
+
+        <div *ngIf="summary.days.length === 0" class="empty-state">
+          <p>No hay jornadas cerradas en el rango seleccionado.</p>
+        </div>
+
+        <div *ngFor="let day of summary.days" class="day-card">
+          <div class="day-card-header">
+            <h3>{{ formatDate(day.date) }}</h3>
+            <span class="day-badge">{{ formatMinutesAsHours(day.minutes) }}</span>
+          </div>
+
+          <div *ngFor="let entry of day.entries" class="entry-card">
+            <div class="entry-row">
+              <div class="entry-block">
+                <span class="entry-label">Tramo</span>
+                <strong>{{ formatTime(entry.startAt) }} → {{ formatTime(entry.endAt) }}</strong>
+              </div>
+
+              <div class="entry-block entry-block-right">
+                <span class="entry-label">Duración</span>
+                <strong>{{ formatMinutesAsHours(entry.minutes) }}</strong>
+              </div>
+            </div>
+
+            <div class="entry-map no-print" *ngIf="hasEntryMap(entry)">
+              <app-map-view [points]="getEntryMapPoints(entry)"></app-map-view>
+            </div>
+
+            <p class="entry-geo-text print-only" *ngIf="hasEntryMap(entry)">
+              <strong>Ubicación registrada:</strong>
+              Este fichaje contiene coordenadas de inicio y/o fin registradas en el sistema.
+            </p>
+          </div>
+
+          <div class="day-total">
+            <strong>Total del día:</strong>
+            <span>{{ formatMinutesAsHours(day.minutes) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="summary-totals card">
+        <div class="section-title">
+          <h2>Totales</h2>
+          <p>Resumen general del periodo seleccionado.</p>
+        </div>
+
+        <div class="totals-list">
+          <div class="total-item">
+            <span>Días trabajados</span>
+            <strong>{{ summary.daysWorked }}</strong>
+          </div>
+
+          <div class="total-item">
+            <span>Total acumulado</span>
+            <strong>{{ formatMinutesAsHours(summary.totalMinutes) }}</strong>
+          </div>
+
+          <div class="total-item">
+            <span>Total horas (decimal)</span>
+            <strong>{{ formatHoursDecimal(summary.totalHours) }}</strong>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </div>
+</section>

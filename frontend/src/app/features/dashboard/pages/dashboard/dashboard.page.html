@@ -1,0 +1,104 @@
+<section class="dashboard-page">
+  <p *ngIf="loading" class="loading-text">Cargando información...</p>
+  <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+
+  <ng-container *ngIf="!loading && user">
+    <section class="hero-card card card-info">
+      <div class="hero-content">
+        <div>
+          <h1>{{ getGreeting() }}, {{ user.name || 'usuario' }}</h1>
+          <p class="hero-text">
+            Aquí puedes consultar tu estado actual de jornada y revisar la información principal de tu cuenta.
+          </p>
+        </div>
+
+        <div class="hero-status" [class.hero-status-open]="isOpen" [class.hero-status-closed]="!isOpen">
+          <span class="hero-status-label">Estado actual</span>
+          <strong>{{ isOpen ? 'Jornada activa' : 'Sin jornada activa' }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <div class="dashboard-grid">
+      <section class="card card-info user-card">
+        <div class="card-header">
+          <div>
+            <h2>Usuario conectado</h2>
+          </div>
+        </div>
+
+        <div class="user-info">
+          <div class="user-avatar">
+            <img *ngIf="user.avatarUrl; else initialAvatar" [src]="getAvatarUrl(user.avatarUrl)" alt="Avatar usuario" />
+
+            <ng-template #initialAvatar>
+              {{ (user.name || user.email || 'U').charAt(0).toUpperCase() }}
+            </ng-template>
+          </div>
+
+          <div class="user-data">
+            <p class="user-name">{{ user.name || 'Usuario' }}</p>
+            <p class="user-email">{{ user.email }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" [class.card-success]="isOpen" [class.card-alert]="!isOpen">
+        <div class="card-header">
+          <div>
+            <h2>Estado de jornada</h2>
+          </div>
+
+          <div class="status-badge" [class.status-open]="isOpen" [class.status-closed]="!isOpen">
+            {{ isOpen ? 'Activa' : 'Cerrada' }}
+          </div>
+        </div>
+
+        <div class="status-content">
+          <div class="status-summary">
+            <p class="status-main">
+              {{ isOpen ? 'Tienes una jornada en curso.' : 'No hay ninguna jornada activa en este momento.' }}
+            </p>
+          </div>
+
+          <div *ngIf="currentEntry" class="entry-box">
+            <div class="entry-item">
+              <span>Inicio</span>
+              <strong>{{ formatDateTime(currentEntry.startAt) }}</strong>
+            </div>
+
+            <div class="entry-item">
+              <span>Tiempo transcurrido</span>
+              <strong>{{ getElapsedTimeLabel() }}</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card card-neutral info-card">
+        <div class="card-header">
+          <div>
+            <h2>Información útil</h2>
+          </div>
+        </div>
+
+        <div class="info-list">
+          <div class="info-item">
+            <span>Nombre</span>
+            <strong>{{ user.name || 'No indicado' }}</strong>
+          </div>
+
+          <div class="info-item">
+            <span>Email</span>
+            <strong>{{ user.email }}</strong>
+          </div>
+
+          <div class="info-item">
+            <span>Estado actual</span>
+            <strong>{{ isOpen ? 'Jornada activa' : 'Sin jornada activa' }}</strong>
+          </div>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+</section>

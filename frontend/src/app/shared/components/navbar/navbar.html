@@ -1,0 +1,29 @@
+<nav class="navbar">
+  <div class="nav-left">
+    <button class="menu-toggle" (click)="toggleMenu()">
+      ☰
+    </button>
+
+    <span class="logo">Control Horario</span>
+  </div>
+
+  <div class="nav-center desktop-nav">
+    <a routerLink="/dashboard">Panel</a>
+    <a routerLink="/fichaje">Fichaje</a>
+    <a routerLink="/summary">Resumen</a>
+    <a *ngIf="userRole === 'ADMIN'" routerLink="/admin">Administración</a>
+    <a routerLink="/profile" class="profile-link">Perfil</a>
+  </div>
+
+  <div class="nav-right">
+    <button class="logout-button" (click)="logout()">Cerrar sesión</button>
+  </div>
+</nav>
+
+<div class="mobile-menu" *ngIf="menuOpen">
+  <a routerLink="/dashboard" (click)="closeMenu()">Panel</a>
+  <a routerLink="/fichaje" (click)="closeMenu()">Fichaje</a>
+  <a routerLink="/summary" (click)="closeMenu()">Resumen</a>
+  <a *ngIf="userRole === 'ADMIN'" routerLink="/admin" (click)="closeMenu()">Administración</a>
+  <a routerLink="/profile" class="profile-link">Perfil</a>
+</div>

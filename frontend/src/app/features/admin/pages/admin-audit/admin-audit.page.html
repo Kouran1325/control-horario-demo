@@ -1,0 +1,158 @@
+<section class="admin-audit-page">
+  <div class="page-header">
+    <div>
+      <h1>Auditoría del sistema</h1>
+      <p class="page-subtitle">
+        Consulta las acciones relevantes realizadas sobre usuarios, fichajes y accesos.
+      </p>
+    </div>
+
+    <div class="page-header-actions">
+      <a routerLink="/admin" class="back-link">Volver a administración</a>
+    </div>
+  </div>
+
+  <section class="card hero-card card-info">
+    <div class="hero-content">
+      <div>
+        <h2>Registro de trazabilidad</h2>
+        <p class="hero-text">
+          Esta vista permite revisar acciones relevantes del sistema, incluyendo accesos,
+          cambios administrativos, confirmaciones legales y eventos de integridad.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card filters-card">
+    <div class="section-header">
+      <div>
+        <h2>Filtros</h2>
+        <p class="section-description">
+          Filtra registros por acción, administrador, usuario afectado y rango de fechas.
+        </p>
+      </div>
+    </div>
+
+    <div class="filters-grid">
+      <div class="filter-field">
+        <label for="action">Acción</label>
+        <select id="action" [(ngModel)]="selectedAction">
+          <option value="">Todas las acciones</option>
+          <option *ngFor="let action of actionOptions" [value]="action">
+            {{ getActionLabel(action) }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label for="adminUserId">Administrador</label>
+        <select id="adminUserId" [(ngModel)]="selectedAdminUserId">
+          <option value="">Todos los administradores</option>
+          <option *ngFor="let admin of admins" [value]="admin.id">
+            {{ admin.name || admin.email }} ({{ admin.email }})
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label for="targetId">Target ID</label>
+        <input id="targetId" type="text" [(ngModel)]="targetId" placeholder="ID de usuario o fichaje"
+          autocomplete="off">
+      </div>
+
+      <div class="filter-field">
+        <label for="fromDate">Desde</label>
+        <input id="fromDate" type="date" [(ngModel)]="fromDate">
+      </div>
+
+      <div class="filter-field">
+        <label for="toDate">Hasta</label>
+        <input id="toDate" type="date" [(ngModel)]="toDate">
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <button type="button" (click)="loadAuditLogs()" [disabled]="loading || adminsLoading">
+        {{ loading ? 'Consultando...' : 'Consultar registros' }}
+      </button>
+
+      <button type="button" class="secondary-button" (click)="clearFilters()" [disabled]="loading">
+        Limpiar filtros
+      </button>
+    </div>
+
+    <p *ngIf="errorMessage" class="message error">{{ errorMessage }}</p>
+  </section>
+
+  <section class="card logs-card">
+    <div class="section-header">
+      <div>
+        <h2>Registros</h2>
+        <p class="section-description">
+          Últimos eventos registrados en la auditoría del sistema.
+        </p>
+      </div>
+    </div>
+
+    <p *ngIf="loading" class="loading-text">Cargando registros de auditoría...</p>
+
+    <div *ngIf="!loading && logs.length === 0" class="empty-state">
+      No hay registros que coincidan con los filtros seleccionados.
+    </div>
+
+    <div *ngIf="!loading && logs.length > 0" class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Acción</th>
+            <th>Admin</th>
+            <th>Target</th>
+            <th>Target ID</th>
+            <th>Metadatos</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let log of paginatedLogs">
+            <td>{{ formatDateTime(log.createdAt) }}</td>
+
+            <td>
+              <span [class]="getActionBadgeClass(log.action)">
+                {{ getActionLabel(log.action) }}
+              </span>
+            </td>
+
+            <td>
+              {{ log.admin.name || '-' }}<br>
+              <small>{{ log.admin.email }}</small>
+            </td>
+
+            <td>{{ log.targetType }}</td>
+            <td class="target-id-cell">{{ log.targetId }}</td>
+            <td class="metadata-cell">{{ getMetadataPreview(log.metadata) }}</td>
+            <td>{{ log.ip || '-' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" *ngIf="!loading && logs.length > pageSize">
+      <p>{{ auditPaginationLabel }}</p>
+
+      <div class="pagination-actions">
+        <button type="button" class="secondary-button" (click)="goToPreviousPage()" [disabled]="currentPage === 1">
+          Anterior
+        </button>
+
+        <span>Página {{ currentPage }} de {{ totalPages }}</span>
+
+        <button type="button" class="secondary-button" (click)="goToNextPage()" [disabled]="currentPage === totalPages">
+          Siguiente
+        </button>
+      </div>
+    </div>
+  </section>
+</section>

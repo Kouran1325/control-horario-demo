@@ -1,0 +1,115 @@
+<section class="fichaje-page">
+  <div class="page-header">
+    <div>
+      <h1>Fichajes</h1>
+      <p class="page-subtitle">
+        Inicia o finaliza tu jornada y revisa tu ubicación actual registrada en el sistema.
+      </p>
+    </div>
+  </div>
+
+  <section class="card hero-card card-info">
+    <div class="hero-content">
+      <div>
+        <h2>Control de jornada</h2>
+        <p class="hero-text">
+          Gestiona tu fichaje de forma rápida y consulta el estado actual de tu jornada.
+        </p>
+      </div>
+
+      <div class="hero-status" [class.hero-status-open]="isOpen" [class.hero-status-closed]="!isOpen">
+        <span class="hero-status-label">Estado actual</span>
+        <strong>{{ isOpen ? 'Jornada activa' : 'Sin jornada activa' }}</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="card status-card" [class.card-success]="isOpen" [class.card-alert]="!isOpen">
+    <div class="section-header">
+      <div>
+        <h2>Estado de jornada</h2>
+        <p class="section-description">
+          Consulta si tienes una jornada abierta y actúa según el estado actual.
+        </p>
+      </div>
+    </div>
+
+    <p *ngIf="loading" class="loading-text">Cargando estado del fichaje...</p>
+
+    <p class="message success" *ngIf="actionMessage">{{ actionMessage }}</p>
+    <p class="message error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div *ngIf="statusResponse && !loading" class="status-content">
+      <div class="status-badge" [class.status-open]="isOpen" [class.status-closed]="!isOpen">
+        {{ isOpen ? 'Jornada activa' : 'Sin jornada activa' }}
+      </div>
+
+      <div class="status-summary">
+        <p class="status-main">
+          {{ isOpen ? 'Actualmente tienes una jornada en curso.' : 'No tienes ninguna jornada activa en este momento.'
+          }}
+        </p>
+      </div>
+
+      <div *ngIf="currentEntry" class="entry-box">
+        <div class="entry-item">
+          <span>Inicio</span>
+          <strong>{{ formatDateTime(currentEntry.startAt) }}</strong>
+        </div>
+
+        <div class="entry-item">
+          <span>Tiempo transcurrido</span>
+          <strong>{{ getElapsedTimeLabel() }}</strong>
+        </div>
+      </div>
+      <div class="geo-info-box">
+        <p>
+          Al iniciar o finalizar la jornada se registrará tu ubicación aproximada con fines de control horario.
+        </p>
+        <p>
+          Puedes consultar más información en la
+          <a routerLink="/privacy-policy">política de privacidad</a>.
+        </p>
+      </div>
+      <div class="actions">
+        <button *ngIf="!isOpen" class="action-button start-button" (click)="startFichaje()" [disabled]="actionLoading">
+          {{ actionLoading ? 'Iniciando...' : 'Iniciar jornada' }}
+        </button>
+
+        <button *ngIf="isOpen" class="action-button stop-button" (click)="stopFichaje()" [disabled]="actionLoading">
+          {{ actionLoading ? 'Finalizando...' : 'Finalizar jornada' }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card map-card card-neutral">
+    <div class="section-header">
+      <div>
+        <h2>Ubicación actual</h2>
+        <p class="section-description">
+          Mapa orientativo con la posición actual detectada y su precisión estimada.
+        </p>
+
+        <p class="geo-warning" *ngIf="currentLat === null">
+          La geolocalización es opcional y se utiliza únicamente para verificar el lugar del fichaje.
+          Si no se concede permiso, el fichaje se registrará sin ubicación.
+        </p>
+      </div>
+    </div>
+
+    <p *ngIf="currentLat === null || currentLng === null" class="loading-text">
+      Cargando ubicación del mapa...
+    </p>
+
+    <div *ngIf="currentAccuracy !== null" class="accuracy-box">
+      <span>Precisión estimada</span>
+      <strong>{{ currentAccuracy | number:'1.0-0' }} m</strong>
+    </div>
+
+    <div class="map-wrapper" *ngIf="currentLat !== null && currentLng !== null">
+      <app-map-view [lat]="currentLat" [lng]="currentLng">
+      </app-map-view>
+    </div>
+  </section>
+</section>

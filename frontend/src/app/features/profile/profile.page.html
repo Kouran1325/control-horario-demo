@@ -1,0 +1,218 @@
+<section class="profile-page">
+  <div class="page-header">
+    <div>
+      <h1>Mi perfil</h1>
+      <p class="page-subtitle">
+        Consulta tu información personal, actualiza tus datos y gestiona tu contraseña de acceso.
+      </p>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="info-box card">
+    Cargando datos del perfil...
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <section *ngIf="currentUser" class="profile-hero card card-info">
+      <div class="profile-hero-content">
+        <div class="profile-avatar-block">
+          <img *ngIf="getAvatarUrl(); else defaultAvatar" [src]="getAvatarUrl() || ''" alt="Foto de perfil"
+            class="profile-avatar" />
+
+          <ng-template #defaultAvatar>
+            <div class="profile-avatar profile-avatar-placeholder">
+              {{ (currentUser.name || currentUser.email || 'U').charAt(0).toUpperCase() }}
+            </div>
+          </ng-template>
+
+          <div class="profile-avatar-actions">
+            <label for="avatarUpload" class="secondary-button upload-label">
+              {{ avatarUploading ? 'Subiendo...' : 'Cambiar foto' }}
+            </label>
+
+            <input id="avatarUpload" type="file" accept="image/png,image/jpeg,image/webp"
+              (change)="onAvatarSelected($event)" [disabled]="avatarUploading" hidden />
+          </div>
+        </div>
+
+        <div class="profile-summary-text">
+          <h2>{{ currentUser.name || 'Usuario' }}</h2>
+          <p class="profile-email">{{ currentUser.email }}</p>
+          <p class="profile-summary-description">
+            Mantén tus datos actualizados y asegúrate de usar una contraseña segura.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <div *ngIf="avatarErrorMessage" class="message error">
+      {{ avatarErrorMessage }}
+    </div>
+
+    <div *ngIf="avatarSuccessMessage" class="message success">
+      {{ avatarSuccessMessage }}
+    </div>
+
+    <div class="profile-grid">
+      <section class="profile-card card card-info">
+        <div class="section-header">
+          <div>
+            <h2>Datos personales</h2>
+            <p class="section-description">
+              Actualiza tu nombre y tu correo electrónico.
+            </p>
+          </div>
+        </div>
+
+        <div *ngIf="errorMessage" class="message error">
+          {{ errorMessage }}
+        </div>
+
+        <div *ngIf="successMessage" class="message success">
+          {{ successMessage }}
+        </div>
+
+        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+          <div class="form-group">
+            <label for="name">Nombre</label>
+            <input id="name" type="text" formControlName="name" placeholder="Introduce tu nombre" autocomplete="name" />
+
+            <small class="field-error" *ngIf="nameControl?.touched && nameControl?.hasError('required')">
+              El nombre es obligatorio
+            </small>
+
+            <small class="field-error" *ngIf="nameControl?.touched && nameControl?.hasError('minlength')">
+              El nombre debe tener al menos 2 caracteres
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Correo electrónico</label>
+            <input id="email" type="email" formControlName="email" placeholder="Introduce tu email"
+              autocomplete="email" />
+
+            <small class="field-error" *ngIf="emailControl?.touched && emailControl?.hasError('required')">
+              El email es obligatorio
+            </small>
+
+            <small class="field-error" *ngIf="emailControl?.touched && emailControl?.hasError('email')">
+              El formato del email no es válido
+            </small>
+          </div>
+
+          <div class="form-actions">
+            <button class="primary-button" type="submit" [disabled]="!canSubmit">
+              {{ saving ? 'Guardando...' : 'Guardar cambios' }}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="profile-card card card-alert">
+        <div class="section-header">
+          <div>
+            <h2>Seguridad</h2>
+            <p class="section-description">
+              Cambia tu contraseña de acceso.
+            </p>
+          </div>
+        </div>
+
+        <div *ngIf="passwordErrorMessage" class="message error">
+          {{ passwordErrorMessage }}
+        </div>
+
+        <div *ngIf="passwordSuccessMessage" class="message success">
+          {{ passwordSuccessMessage }}
+        </div>
+
+        <form [formGroup]="passwordForm" (ngSubmit)="onPasswordSubmit()" class="profile-form">
+          <div class="form-group">
+            <label for="currentPassword">Contraseña actual</label>
+
+            <div class="password-input-wrapper">
+              <input id="currentPassword" [type]="showCurrentPassword ? 'text' : 'password'"
+                formControlName="currentPassword" placeholder="Introduce tu contraseña actual"
+                autocomplete="current-password" />
+
+              <button type="button" class="toggle-password-button icon" [class.active]="showCurrentPassword"
+                (click)="toggleCurrentPasswordVisibility()" aria-label="Mostrar u ocultar contraseña actual">
+                <svg viewBox="0 0 24 24" class="eye-icon" aria-hidden="true">
+                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" />
+                </svg>
+              </button>
+            </div>
+
+            <small class="field-error"
+              *ngIf="currentPasswordControl?.touched && currentPasswordControl?.hasError('required')">
+              La contraseña actual es obligatoria
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="newPassword">Nueva contraseña</label>
+
+            <div class="password-input-wrapper">
+              <input id="newPassword" [type]="showPassword ? 'text' : 'password'" formControlName="newPassword"
+                placeholder="Introduce tu nueva contraseña" autocomplete="new-password" />
+
+              <button type="button" class="toggle-password-button icon" [class.active]="showPassword"
+                (click)="togglePasswordVisibility()" aria-label="Mostrar u ocultar nueva contraseña">
+                <svg viewBox="0 0 24 24" class="eye-icon" aria-hidden="true">
+                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" />
+                </svg>
+              </button>
+            </div>
+
+            <small class="field-error" *ngIf="newPasswordControl?.touched && newPasswordControl?.hasError('required')">
+              La nueva contraseña es obligatoria
+            </small>
+
+            <small class="field-error" *ngIf="newPasswordControl?.touched && newPasswordControl?.hasError('pattern')">
+              Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="confirmNewPassword">Confirmar nueva contraseña</label>
+
+            <div class="password-input-wrapper">
+              <input id="confirmNewPassword" [type]="showConfirmPassword ? 'text' : 'password'"
+                formControlName="confirmNewPassword" placeholder="Repite la nueva contraseña"
+                autocomplete="new-password" />
+
+              <button type="button" class="toggle-password-button icon" [class.active]="showConfirmPassword"
+                (click)="toggleConfirmPasswordVisibility()" aria-label="Mostrar u ocultar confirmación de contraseña">
+                <svg viewBox="0 0 24 24" class="eye-icon" aria-hidden="true">
+                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" />
+                </svg>
+              </button>
+            </div>
+
+            <small class="field-error"
+              *ngIf="confirmNewPasswordControl?.touched && confirmNewPasswordControl?.hasError('required')">
+              Debes confirmar la nueva contraseña
+            </small>
+
+            <small class="field-error" *ngIf="confirmNewPasswordControl?.touched && passwordsDoNotMatch()">
+              Las contraseñas no coinciden
+            </small>
+          </div>
+
+          <div class="form-actions">
+            <button class="primary-button danger-button" type="submit" [disabled]="!canSubmitPassword">
+              {{ passwordSaving ? 'Guardando...' : 'Cambiar contraseña' }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </ng-container>
+</section>

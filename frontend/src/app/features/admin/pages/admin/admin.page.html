@@ -1,0 +1,382 @@
+<section class="admin-page">
+  <div class="page-header">
+    <div>
+      <h1>Panel de administración</h1>
+      <p class="page-subtitle">
+        Gestiona usuarios, revisa fichajes abiertos y accede a la gestión avanzada de fichajes.
+      </p>
+    </div>
+  </div>
+
+  <section class="card hero-card card-info">
+    <div class="hero-content">
+      <div>
+        <h2>Administración general</h2>
+        <p class="hero-text">
+          Desde aquí puedes supervisar usuarios, controlar fichajes abiertos y acceder a la gestión completa de
+          jornadas.
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <a routerLink="/admin/summary" class="hero-link">
+          Gestión de fichajes
+        </a>
+
+        <a routerLink="/admin/audit" class="hero-link secondary">
+          Auditoría del sistema
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="card priority-card">
+    <div class="section-header">
+      <div>
+        <h2>Fichajes abiertos</h2>
+        <p class="section-description">
+          Revisa jornadas abiertas y fuerza el cierre si fuera necesario.
+        </p>
+      </div>
+    </div>
+
+    <p *ngIf="entriesLoading" class="loading-text">Cargando fichajes abiertos...</p>
+    <p class="message error" *ngIf="entriesError">{{ entriesError }}</p>
+
+    <div class="table-wrapper compact-table-wrapper" *ngIf="!entriesLoading && openEntries.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>Inicio</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of openEntries">
+            <td>{{ entry.user.name || '-' }}</td>
+            <td>{{ entry.user.email }}</td>
+            <td>{{ formatDateTime(entry.startAt) }}</td>
+            <td>
+              <button type="button" class="danger-button" (click)="forceStop(entry.id)"
+                [disabled]="closingEntryId === entry.id">
+                {{ closingEntryId === entry.id ? 'Cerrando...' : 'Forzar cierre' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" *ngIf="!entriesLoading && openEntries.length === 0">
+      No hay fichajes abiertos.
+    </div>
+  </section>
+
+  <section class="card users-card">
+    <div class="section-header">
+      <div>
+        <h2>Usuarios</h2>
+        <p class="section-description">
+          Busca, filtra y gestiona usuarios registrados en el sistema.
+        </p>
+      </div>
+    </div>
+
+    <div class="filters-bar">
+      <div class="filters-header">
+        <h3>Buscar y filtrar usuarios</h3>
+        <p>Localiza usuarios por nombre, email, rol o estado.</p>
+      </div>
+
+      <div class="filters">
+        <div class="filter-group search-group">
+          <label for="user-search">Buscar</label>
+          <input id="user-search" type="text" placeholder="Nombre o email" [(ngModel)]="search"
+            (input)="onSearchChange()" autocomplete="off" />
+        </div>
+
+        <div class="filter-group">
+          <label for="roleFilter">Rol</label>
+          <select id="roleFilter" [(ngModel)]="selectedRole" (change)="applyFilters()">
+            <option value="">Todos los roles</option>
+            <option value="ADMIN">ADMIN</option>
+            <option value="USER">USER</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="enabledFilter">Estado</label>
+          <select id="enabledFilter" [(ngModel)]="selectedEnabled" (change)="applyFilters()">
+            <option value="">Todos</option>
+            <option value="true">Activos</option>
+            <option value="false">Deshabilitados</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filters-footer">
+        <p class="results-count" *ngIf="!usersLoading">
+          {{ usersCountLabel }}
+        </p>
+
+        <button type="button" class="secondary-button" (click)="clearFilters()">
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+
+    <p class="message success" *ngIf="userActionSuccess">{{ userActionSuccess }}</p>
+    <p class="message error" *ngIf="userActionError">{{ userActionError }}</p>
+
+    <p *ngIf="usersLoading" class="loading-text">Cargando usuarios...</p>
+    <p class="message error" *ngIf="usersError">{{ usersError }}</p>
+
+    <div class="table-wrapper users-table-wrapper" *ngIf="!usersLoading && users.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Email</th>
+            <th>Nombre</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Creado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <ng-container *ngFor="let user of paginatedUsers">
+            <tr [class.disabled-user]="!user.enabled">
+              <td class="avatar-cell">
+                <img *ngIf="user.avatarUrl; else defaultAvatarAdmin" [src]="getAvatarUrl(user.avatarUrl)"
+                  class="admin-avatar" alt="avatar" />
+
+                <ng-template #defaultAvatarAdmin>
+                  <div class="admin-avatar admin-avatar-placeholder">
+                    {{ (user.name || user.email || 'U').charAt(0).toUpperCase() }}
+                  </div>
+                </ng-template>
+              </td>
+
+              <td>{{ user.email }}</td>
+              <td>{{ user.name || '-' }}</td>
+
+              <td>
+                <span class="role-badge" [class.admin]="user.role === 'ADMIN'">
+                  {{ user.role }}
+                </span>
+              </td>
+
+              <td>
+                <span class="status-badge" [class.disabled]="!user.enabled">
+                  {{ user.enabled ? 'Activo' : 'Deshabilitado' }}
+                </span>
+              </td>
+
+              <td>{{ formatDateTime(user.createdAt) }}</td>
+
+              <td class="actions-cell">
+                <button type="button" [class.danger-button]="user.enabled" [class.success-button]="!user.enabled"
+                  (click)="toggleEnabled(user)" [disabled]="updatingUserId === user.id">
+                  {{ user.enabled ? 'Deshabilitar' : 'Habilitar' }}
+                </button>
+
+                <button type="button" class="warning-button" (click)="toggleRole(user)"
+                  [disabled]="updatingUserId === user.id">
+                  {{ user.role === 'ADMIN' ? 'Pasar a USER' : 'Pasar a ADMIN' }}
+                </button>
+
+                <button type="button" class="info-button" (click)="openResetPassword(user)"
+                  [disabled]="resetPasswordLoading && resettingPasswordUserId === user.id">
+                  Reset password
+                </button>
+              </td>
+            </tr>
+
+            <tr *ngIf="resettingPasswordUserId === user.id">
+              <td colspan="7">
+                <div class="reset-password-panel">
+                  <h3>Restablecer contraseña para {{ user.name || user.email }}</h3>
+
+                  <form [formGroup]="resetPasswordForm" (ngSubmit)="submitResetPassword(user)"
+                    class="reset-password-form">
+                    <div class="form-row">
+                      <label for="reset-password-{{ user.id }}">Nueva contraseña</label>
+
+                      <div class="password-input-wrapper">
+                        <input id="reset-password-{{ user.id }}" [type]="showAdminResetPassword ? 'text' : 'password'"
+                          formControlName="password" placeholder="Nueva contraseña" autocomplete="new-password" />
+
+                        <button type="button" class="toggle-password-button icon"
+                          [class.active]="showAdminResetPassword" (click)="toggleAdminResetPasswordVisibility()"
+                          aria-label="Mostrar u ocultar nueva contraseña">
+                          <svg viewBox="0 0 24 24" class="eye-icon" aria-hidden="true">
+                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" fill="none" stroke="currentColor"
+                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <small class="message error"
+                        *ngIf="resetPasswordPasswordControl?.touched && resetPasswordPasswordControl?.hasError('required')">
+                        La contraseña es obligatoria.
+                      </small>
+
+                      <small class="message error"
+                        *ngIf="resetPasswordPasswordControl?.touched && resetPasswordPasswordControl?.hasError('pattern')">
+                        Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
+                      </small>
+                    </div>
+
+                    <div class="form-row">
+                      <label for="reset-confirm-password-{{ user.id }}">Confirmar contraseña</label>
+
+                      <div class="password-input-wrapper">
+                        <input id="reset-confirm-password-{{ user.id }}"
+                          [type]="showAdminResetConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword"
+                          placeholder="Confirmar contraseña" autocomplete="new-password" />
+
+                        <button type="button" class="toggle-password-button icon"
+                          [class.active]="showAdminResetConfirmPassword"
+                          (click)="toggleAdminResetConfirmPasswordVisibility()"
+                          aria-label="Mostrar u ocultar confirmación de contraseña">
+                          <svg viewBox="0 0 24 24" class="eye-icon" aria-hidden="true">
+                            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" fill="none" stroke="currentColor"
+                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <small class="message error"
+                        *ngIf="resetPasswordConfirmControl?.touched && resetPasswordConfirmControl?.hasError('required')">
+                        Debes confirmar la contraseña.
+                      </small>
+                    </div>
+
+                    <p class="message success" *ngIf="resetPasswordSuccess">{{ resetPasswordSuccess }}</p>
+                    <p class="message error" *ngIf="resetPasswordError">{{ resetPasswordError }}</p>
+
+                    <div class="reset-password-actions">
+                      <button type="submit" [disabled]="resetPasswordLoading">
+                        {{ resetPasswordLoading ? 'Actualizando...' : 'Guardar nueva contraseña' }}
+                      </button>
+
+                      <button type="button" class="secondary-button" (click)="cancelResetPassword()"
+                        [disabled]="resetPasswordLoading">
+                        Cancelar
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" *ngIf="!usersLoading && users.length > usersPageSize">
+      <p>{{ usersPaginationLabel }}</p>
+
+      <div class="pagination-actions">
+        <button type="button" class="secondary-button" (click)="goToPreviousUsersPage()"
+          [disabled]="currentUsersPage === 1">
+          Anterior
+        </button>
+
+        <span>Página {{ currentUsersPage }} de {{ totalUsersPages }}</span>
+
+        <button type="button" class="secondary-button" (click)="goToNextUsersPage()"
+          [disabled]="currentUsersPage === totalUsersPages">
+          Siguiente
+        </button>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!usersLoading && users.length === 0">
+      No hay usuarios para mostrar con los filtros actuales.
+    </div>
+  </section>
+
+  <section class="card create-card">
+    <div class="section-header">
+      <div>
+        <h2>Crear usuario</h2>
+        <p class="section-description">
+          Añade nuevos usuarios con rol y estado inicial definidos.
+        </p>
+      </div>
+    </div>
+
+    <form [formGroup]="createUserForm" (ngSubmit)="createUser()" class="admin-form">
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="create-name">Nombre</label>
+          <input id="create-name" type="text" formControlName="name" placeholder="Nombre del usuario"
+            autocomplete="name" />
+        </div>
+
+        <div class="form-row">
+          <label for="create-email">Email</label>
+          <input id="create-email" type="email" formControlName="email" placeholder="Correo electrónico"
+            autocomplete="email" />
+
+          <small class="field-error"
+            *ngIf="createUserForm.get('email')?.touched && createUserForm.get('email')?.hasError('required')">
+            El email es obligatorio.
+          </small>
+
+          <small class="field-error"
+            *ngIf="createUserForm.get('email')?.touched && createUserForm.get('email')?.hasError('email')">
+            El formato del email no es válido.
+          </small>
+        </div>
+
+        <div class="form-row">
+          <label for="create-password">Contraseña</label>
+          <input id="create-password" type="password" formControlName="password" placeholder="Contraseña inicial"
+            autocomplete="new-password" />
+
+          <small class="field-error"
+            *ngIf="createUserForm.get('password')?.touched && createUserForm.get('password')?.hasError('required')">
+            La contraseña es obligatoria.
+          </small>
+
+          <small class="field-error"
+            *ngIf="createUserForm.get('password')?.touched && createUserForm.get('password')?.hasError('pattern')">
+            Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número.
+          </small>
+        </div>
+
+        <div class="form-row">
+          <label for="create-role">Rol</label>
+          <select id="create-role" formControlName="role">
+            <option value="USER">USER</option>
+            <option value="ADMIN">ADMIN</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row checkbox-row">
+        <label>
+          <input type="checkbox" formControlName="enabled" />
+          Usuario habilitado
+        </label>
+      </div>
+
+      <p class="message success" *ngIf="createSuccess">{{ createSuccess }}</p>
+      <p class="message error" *ngIf="createError">{{ createError }}</p>
+
+      <div class="form-actions">
+        <button type="submit" [disabled]="createLoading || createUserForm.invalid">
+          {{ createLoading ? 'Creando...' : 'Crear usuario' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</section>

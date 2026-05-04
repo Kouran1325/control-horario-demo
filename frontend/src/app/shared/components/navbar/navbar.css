@@ -1,0 +1,178 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  background: #1e293b;
+  color: white;
+  box-sizing: border-box;
+  min-height: 64px;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.nav-center {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-center a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.nav-center a:hover {
+  text-decoration: underline;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.logout-button {
+  background: #ef4444;
+  border: none;
+  min-height: 42px;
+  padding: 0 14px;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.logout-button:hover {
+  background: #dc2626;
+}
+
+.menu-toggle {
+  display: none;
+  font-size: 22px;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 8px;
+  flex: 0 0 42px;
+}
+
+.menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mobile-menu {
+  display: flex;
+  flex-direction: column;
+  background: #1e293b;
+  padding: 8px 20px 14px;
+  box-sizing: border-box;
+}
+
+.mobile-menu a {
+  color: white;
+  text-decoration: none;
+  padding: 12px 0;
+  border-top: 1px solid #334155;
+  line-height: 1.4;
+}
+
+.mobile-menu a:first-child {
+  border-top: none;
+}
+
+.mobile-menu a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .desktop-nav {
+    display: none;
+  }
+
+  .nav-center {
+    display: none;
+  }
+
+  .menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    padding: 12px 14px;
+    gap: 12px;
+    min-height: 60px;
+  }
+
+  .logo {
+    font-size: 16px;
+  }
+
+  .logout-button {
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .mobile-menu {
+    padding: 8px 14px 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .navbar {
+    padding: 10px 12px;
+  }
+
+  .logo {
+    font-size: 15px;
+  }
+
+  .logout-button {
+    min-height: 38px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .menu-toggle {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    font-size: 20px;
+  }
+
+  .mobile-menu a {
+    padding: 11px 0;
+    font-size: 14px;
+  }
+}

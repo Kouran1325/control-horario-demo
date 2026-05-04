@@ -1,0 +1,315 @@
+.register-wrapper {
+  min-height: calc(100vh - 140px);
+  min-height: calc(100dvh - 140px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  box-sizing: border-box;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+}
+
+.register-card h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.register-subtitle {
+  margin: 0 0 24px;
+  color: #6b7280;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-group input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  min-width: 0;
+}
+
+.form-group input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.field-error {
+  margin: 6px 0 0;
+  color: #dc2626;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.form-error {
+  margin: 8px 0 16px;
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.form-success {
+  margin: 8px 0 16px;
+  color: #15803d;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+button[type="submit"] {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s ease;
+  min-height: 44px;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+button[type="submit"]:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+.auth-link {
+  margin-top: 18px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.auth-link a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-link a:hover {
+  text-decoration: underline;
+}
+
+.password-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.password-input-wrapper input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+.toggle-password-button.icon {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0;
+  flex: 0 0 42px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #f8fafc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  transition: 0.2s ease;
+}
+
+.toggle-password-button.icon.active {
+  color: #2563eb;
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.toggle-password-button.icon:hover {
+  background: #eef2f7;
+}
+
+.toggle-password-button.icon:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.eye-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.privacy-box {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.checkbox-row {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: start;
+  gap: 10px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: #2563eb;
+}
+
+.checkbox-row span {
+  display: block;
+}
+
+.privacy-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.privacy-text a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.privacy-text a:hover {
+  text-decoration: underline;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .register-wrapper {
+    padding: 20px 14px;
+  }
+
+  .register-card {
+    max-width: 100%;
+    padding: 22px 18px;
+    border-radius: 14px;
+  }
+
+  .register-card h1 {
+    font-size: 26px;
+  }
+}
+
+/* Móvil */
+@media (max-width: 480px) {
+  .register-wrapper {
+    padding: 16px 12px;
+  }
+
+  .register-card {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+
+  .register-card h1 {
+    font-size: 24px;
+  }
+
+  .register-subtitle {
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group input {
+    padding: 11px 12px;
+    font-size: 14px;
+  }
+
+  .checkbox-row {
+    gap: 8px;
+  }
+
+  .privacy-text,
+  .field-error,
+  .form-error,
+  .form-success {
+    word-break: break-word;
+  }
+
+  .auth-link a,
+  .privacy-text a {
+    word-break: break-word;
+  }
+}
+
+/* Móviles muy pequeños */
+@media (max-width: 360px) {
+  .register-wrapper {
+    padding: 12px 10px;
+  }
+
+  .register-card {
+    padding: 18px 14px;
+  }
+
+  .register-card h1 {
+    font-size: 22px;
+  }
+
+  .password-input-wrapper {
+    gap: 8px;
+  }
+
+  .toggle-password-button.icon {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+  }
+
+  .checkbox-row {
+    grid-template-columns: 16px 1fr;
+  }
+
+  .checkbox-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+}

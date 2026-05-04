@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider   = "prisma-client-js"
+  output     = "../src/generated/prisma"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id                    String               @id @default(uuid())
+  email                 String               @unique
+  passwordHash          String
+  name                  String?
+  avatarUrl             String?
+  role                  Role                 @default(USER)
+  enabled               Boolean              @default(false)
+
+  privacyInfoAcceptedAt DateTime?
+  privacyInfoVersion    String?
+
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  entries               TimeEntry[]
+  adminAuditLogs        AdminAuditLog[]
+  passwordResetTokens   PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  userId     String
+  tokenHash  String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model TimeEntry {
+  id               String   @id @default(uuid())
+  userId           String
+  startAt          DateTime
+  endAt            DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  latStart         Float?
+  lonStart         Float?
+  latEnd           Float?
+  lonEnd           Float?
+  accuracyStart    Float?
+  accuracyEnd      Float?
+
+  closedByAdmin    Boolean  @default(false)
+  closedByAdminId  String?
+  closeReason      String?
+  closeMethod      String   @default("NORMAL")
+
+  hash             String?
+  tamperDetectedAt DateTime?
+
+  createdByAdmin   Boolean  @default(false)
+  createdByAdminId String?
+  createReason     String?
+
+  editedByAdmin    Boolean  @default(false)
+  editedByAdminId  String?
+  editReason       String?
+  editedAt         DateTime?
+
+  entryMethod      String   @default("USER")
+
+  voidedByAdmin    Boolean  @default(false)
+  voidedByAdminId  String?
+  voidReason       String?
+  voidedAt         DateTime?
+
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, startAt])
+}
+
+model AdminAuditLog {
+  id          String   @id @default(uuid())
+  adminUserId String
+  action      String
+  targetType  String
+  targetId    String
+  metadata    Json?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  admin User @relation(fields: [adminUserId], references: [id])
+}

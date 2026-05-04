@@ -1,0 +1,465 @@
+<section class="admin-summary-page">
+  <div class="page-header">
+    <div>
+      <h1>Gestión de fichajes</h1>
+      <p class="page-subtitle">
+        Consulta, crea, corrige y anula fichajes de usuarios.
+      </p>
+    </div>
+
+    <div class="page-header-actions">
+      <a class="back-link" routerLink="/admin">Volver a administración</a>
+    </div>
+  </div>
+
+  <section class="card hero-card card-info">
+    <div class="hero-content">
+      <div>
+        <h2>Gestión avanzada</h2>
+        <p class="hero-text">
+          Desde aquí puedes consultar jornadas, crear fichajes manuales, editar registros y anular incidencias.
+        </p>
+      </div>
+
+      <div class="top-actions top-actions-split">
+        <button class="secondary-btn action-btn" type="button" (click)="exportPdf()"
+          [disabled]="summaryDays.length === 0">
+          Exportar PDF
+        </button>
+
+        <button class="primary-btn action-btn" type="button" (click)="downloadCsv()"
+          [disabled]="summaryDays.length === 0">
+          Descargar CSV
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card filters-card">
+    <div class="section-header">
+      <div>
+        <h2>Consulta de jornadas</h2>
+        <p class="section-description">
+          Selecciona usuario y rango de fechas para revisar sus fichajes.
+        </p>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="filter-field">
+        <label for="user">Usuario</label>
+        <select id="user" [(ngModel)]="selectedUserId">
+          <option value="">Selecciona un usuario</option>
+          <option *ngFor="let user of users" [value]="user.id">
+            {{ user.name || user.email }} ({{ user.email }})
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label for="fromDate">Desde</label>
+        <input id="fromDate" type="date" [(ngModel)]="fromDate">
+      </div>
+
+      <div class="filter-field">
+        <label for="toDate">Hasta</label>
+        <input id="toDate" type="date" [(ngModel)]="toDate">
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" (click)="loadSummary()" [disabled]="loading || usersLoading">
+          {{ loading ? 'Consultando...' : 'Consultar resumen' }}
+        </button>
+      </div>
+    </div>
+
+    <p *ngIf="usersLoading" class="loading-text">Cargando usuarios...</p>
+    <p *ngIf="errorMessage" class="message error">{{ errorMessage }}</p>
+  </section>
+
+  <section class="card create-card">
+    <div class="section-header">
+      <div>
+        <h2>Crear fichaje manual</h2>
+        <p class="section-description">
+          Registra un fichaje manual con motivo y estado definido.
+        </p>
+      </div>
+    </div>
+
+    <form [formGroup]="manualEntryForm" (ngSubmit)="createManualEntry()" class="manual-entry-form">
+      <div class="filters">
+        <div class="filter-field">
+          <label for="manualUser">Usuario</label>
+          <select id="manualUser" formControlName="userId">
+            <option value="">Selecciona un usuario</option>
+            <option *ngFor="let user of users" [value]="user.id">
+              {{ user.name || user.email }} ({{ user.email }})
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="manualDate">Fecha</label>
+          <input id="manualDate" type="date" formControlName="date">
+        </div>
+
+        <div class="filter-field">
+          <label for="manualStartTime">Hora inicio</label>
+          <input id="manualStartTime" type="time" formControlName="startTime">
+        </div>
+
+        <div class="filter-field">
+          <label for="manualEndTime">Hora fin</label>
+          <input id="manualEndTime" type="time" formControlName="endTime">
+        </div>
+      </div>
+
+      <div class="manual-entry-extra">
+        <label class="checkbox-inline">
+          <input type="checkbox" formControlName="keepOpen">
+          Dejar fichaje abierto para que el usuario lo cierre después
+        </label>
+      </div>
+
+      <div class="filter-field">
+        <label for="manualReason">Motivo</label>
+        <textarea id="manualReason" formControlName="reason" rows="3"
+          placeholder="Ej: Olvidó iniciar jornada"></textarea>
+      </div>
+
+      <small class="field-error" *ngIf="manualUserIdControl?.touched && manualUserIdControl?.hasError('required')">
+        Debes seleccionar un usuario.
+      </small>
+
+      <small class="field-error" *ngIf="manualDateControl?.touched && manualDateControl?.hasError('required')">
+        Debes indicar la fecha.
+      </small>
+
+      <small class="field-error"
+        *ngIf="manualStartTimeControl?.touched && manualStartTimeControl?.hasError('required')">
+        Debes indicar la hora de inicio.
+      </small>
+
+      <small class="field-error" *ngIf="manualReasonControl?.touched && manualReasonControl?.hasError('required')">
+        Debes indicar un motivo.
+      </small>
+
+      <small class="field-error" *ngIf="manualReasonControl?.touched && manualReasonControl?.hasError('minlength')">
+        El motivo debe tener al menos 5 caracteres.
+      </small>
+
+      <p *ngIf="manualCreateError" class="message error">{{ manualCreateError }}</p>
+      <p *ngIf="manualCreateSuccess" class="message success">{{ manualCreateSuccess }}</p>
+
+      <div class="filter-actions">
+        <button type="submit" [disabled]="manualCreateLoading">
+          {{ manualCreateLoading ? 'Creando...' : 'Crear fichaje manual' }}
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <div id="pdf-content">
+    <section class="pdf-header card" *ngIf="selectedUser && summaryDays.length > 0">
+      <h2>Informe de horas trabajadas</h2>
+      <p class="pdf-subtitle">Aplicación de control horario</p>
+
+      <div class="pdf-meta">
+        <p><strong>Usuario:</strong> {{ selectedUser.name || '-' }}</p>
+        <p><strong>Email:</strong> {{ selectedUser.email }}</p>
+        <p><strong>Desde:</strong> {{ fromDate }}</p>
+        <p><strong>Hasta:</strong> {{ toDate }}</p>
+        <p><strong>Fecha de generación:</strong> {{ todayForPdf }}</p>
+      </div>
+    </section>
+
+    <section class="summary-container" *ngIf="summaryDays.length > 0">
+      <div class="summary-days card">
+        <div class="section-header">
+          <div>
+            <h2>Desglose por día</h2>
+            <p class="section-description">
+              Resumen agrupado de jornadas cerradas en el periodo consultado.
+            </p>
+          </div>
+        </div>
+
+        <div *ngFor="let day of summaryDays" class="day-card">
+          <div class="day-card-header">
+            <h3>{{ formatDate(day.date) }}</h3>
+            <span class="day-badge">{{ formatMinutesAsHours(day.minutes) }}</span>
+          </div>
+
+          <div *ngFor="let entry of day.entries" class="entry-row-block">
+            <div class="entry-row">
+              <div class="entry-row-block-info">
+                <span class="entry-row-label">Tramo</span>
+                <strong>{{ formatTime(entry.startAt) }} → {{ formatTime(entry.endAt) }}</strong>
+              </div>
+
+              <div class="entry-row-block-info entry-row-block-info-right">
+                <span class="entry-row-label">Duración</span>
+                <strong>{{ formatMinutesAsHours(entry.minutes) }}</strong>
+              </div>
+            </div>
+
+            <div class="entry-map" *ngIf="!isExportingPdf && hasEntryMap(entry)">
+              <app-map-view [points]="getEntryMapPoints(entry)"></app-map-view>
+            </div>
+
+            <p *ngIf="entry.latStart !== null && entry.lonStart !== null" class="entry-geo">
+              <strong>Inicio:</strong>
+              {{ entry.latStart }}, {{ entry.lonStart }}
+              <span *ngIf="entry.accuracyStart !== null">
+                (precisión: {{ entry.accuracyStart }} m)
+              </span>
+            </p>
+
+            <p *ngIf="entry.latEnd !== null && entry.lonEnd !== null" class="entry-geo">
+              <strong>Fin:</strong>
+              {{ entry.latEnd }}, {{ entry.lonEnd }}
+              <span *ngIf="entry.accuracyEnd !== null">
+                (precisión: {{ entry.accuracyEnd }} m)
+              </span>
+            </p>
+          </div>
+
+          <div class="day-total">
+            <strong>Total del día:</strong>
+            <span>{{ formatMinutesAsHours(day.minutes) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-totals card">
+        <div class="section-header">
+          <div>
+            <h2>Totales</h2>
+            <p class="section-description">
+              Resumen global del rango consultado.
+            </p>
+          </div>
+        </div>
+
+        <div class="totals-list">
+          <div class="total-item">
+            <span>Días trabajados</span>
+            <strong>{{ daysWorked }}</strong>
+          </div>
+
+          <div class="total-item">
+            <span>Total minutos</span>
+            <strong>{{ totalMinutes }}</strong>
+          </div>
+
+          <div class="total-item">
+            <span>Total horas</span>
+            <strong>{{ totalHours }}</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card empty-state-card"
+      *ngIf="!loading && selectedUserId && summaryDays.length === 0 && !errorMessage">
+      <p>No hay jornadas cerradas para ese usuario en el rango seleccionado.</p>
+    </section>
+  </div>
+
+  <section class="card entries-card" *ngIf="flatEntries.length > 0">
+    <div class="section-header section-header-split">
+      <div>
+        <h2>Fichajes del rango seleccionado</h2>
+        <p class="section-description">
+          Edita o anula fichajes individuales del usuario consultado.
+        </p>
+      </div>
+
+      <div class="filter-field filter-field-compact">
+        <label for="statusFilter">Filtrar por estado</label>
+        <select id="statusFilter" [(ngModel)]="selectedStatusFilter" (change)="applyFilters()">
+          <option value="ALL">Todos</option>
+          <option value="MANUAL">Manuales</option>
+          <option value="EDITED">Editados</option>
+          <option value="VOIDED">Anulados</option>
+          <option value="TAMPERED">Manipulados</option>
+          <option value="CLOSED_BY_ADMIN">Cierre admin</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="entries-list">
+      <div class="entry-card" *ngFor="let entry of filteredEntries" [class.entry-card-voided]="entry.voidedByAdmin">
+        <div class="entry-card-header">
+          <div class="entry-card-info">
+            <strong>{{ formatDate(entry.startAt) }}</strong>
+
+            <div class="entry-badges">
+              <span *ngIf="entry.createdByAdmin" class="badge manual">Manual</span>
+              <span *ngIf="entry.editedByAdmin" class="badge edited">Editado</span>
+              <span *ngIf="entry.voidedByAdmin" class="badge voided">Anulado</span>
+              <span *ngIf="entry.closedByAdmin" class="badge closed">Cierre admin</span>
+              <span *ngIf="entry.isTampered" class="badge tampered">Posible manipulación</span>
+            </div>
+
+            <p>
+              <strong>Tramo:</strong>
+              {{ formatTime(entry.startAt) }}
+              →
+              {{ entry.endAt ? formatTime(entry.endAt) : 'Abierto' }}
+            </p>
+
+            <p *ngIf="entry.durationMinutes !== null">
+              <strong>Duración:</strong>
+              {{ formatMinutesAsHours(entry.durationMinutes) }}
+            </p>
+
+            <p *ngIf="entry.durationMinutes === null" class="entry-open-text">
+              Fichaje abierto
+            </p>
+
+            <p *ngIf="entry.editedByAdmin && entry.editReason" class="entry-edit-reason">
+              <strong>Motivo edición:</strong> {{ entry.editReason }}
+            </p>
+
+            <p *ngIf="entry.voidedByAdmin && entry.voidReason" class="entry-void-reason">
+              <strong>Motivo anulación:</strong> {{ entry.voidReason }}
+            </p>
+
+            <p *ngIf="entry.isTampered" class="entry-tampered-warning">
+              Este fichaje no supera la verificación de integridad y pudo haber sido modificado directamente en base de
+              datos.
+            </p>
+
+            <div class="entry-map" *ngIf="hasEntryMap(entry)">
+              <app-map-view [points]="getEntryMapPoints(entry)"></app-map-view>
+            </div>
+
+            <p *ngIf="entry.latStart !== null && entry.lonStart !== null" class="entry-geo">
+              <strong>Ubicación inicio:</strong>
+              {{ entry.latStart }}, {{ entry.lonStart }}
+              <span *ngIf="entry.accuracyStart !== null">
+                (precisión: {{ entry.accuracyStart }} m)
+              </span>
+            </p>
+
+            <p *ngIf="entry.latEnd !== null && entry.lonEnd !== null" class="entry-geo">
+              <strong>Ubicación fin:</strong>
+              {{ entry.latEnd }}, {{ entry.lonEnd }}
+              <span *ngIf="entry.accuracyEnd !== null">
+                (precisión: {{ entry.accuracyEnd }} m)
+              </span>
+            </p>
+          </div>
+
+          <div class="entry-card-buttons">
+            <button type="button" (click)="openEditEntry(entry)" [disabled]="entry.voidedByAdmin">
+              Editar
+            </button>
+
+            <button type="button" class="danger-button" (click)="openVoidEntry(entry)" [disabled]="entry.voidedByAdmin">
+              Anular
+            </button>
+          </div>
+        </div>
+
+        <div class="edit-entry-panel" *ngIf="editingEntryId === entry.id">
+          <form [formGroup]="editEntryForm" (ngSubmit)="submitEditEntry(entry)" class="edit-entry-form">
+            <div class="filters">
+              <div class="filter-field">
+                <label for="editDate-{{ entry.id }}">Fecha</label>
+                <input id="editDate-{{ entry.id }}" type="date" formControlName="date">
+              </div>
+
+              <div class="filter-field">
+                <label for="editStartTime-{{ entry.id }}">Hora inicio</label>
+                <input id="editStartTime-{{ entry.id }}" type="time" formControlName="startTime">
+              </div>
+
+              <div class="filter-field">
+                <label for="editEndTime-{{ entry.id }}">Hora fin</label>
+                <input id="editEndTime-{{ entry.id }}" type="time" formControlName="endTime">
+              </div>
+            </div>
+
+            <div class="manual-entry-extra">
+              <label class="checkbox-inline">
+                <input type="checkbox" formControlName="keepOpen">
+                Dejar fichaje abierto
+              </label>
+            </div>
+
+            <div class="filter-field">
+              <label for="editReason-{{ entry.id }}">Motivo</label>
+              <textarea id="editReason-{{ entry.id }}" rows="3" formControlName="reason"
+                placeholder="Ej: Corrección tras incidencia"></textarea>
+            </div>
+
+            <small class="field-error" *ngIf="editDateControl?.touched && editDateControl?.hasError('required')">
+              Debes indicar la fecha.
+            </small>
+
+            <small class="field-error"
+              *ngIf="editStartTimeControl?.touched && editStartTimeControl?.hasError('required')">
+              Debes indicar la hora de inicio.
+            </small>
+
+            <small class="field-error" *ngIf="editReasonControl?.touched && editReasonControl?.hasError('required')">
+              Debes indicar un motivo.
+            </small>
+
+            <small class="field-error" *ngIf="editReasonControl?.touched && editReasonControl?.hasError('minlength')">
+              El motivo debe tener al menos 5 caracteres.
+            </small>
+
+            <p *ngIf="editEntryError" class="message error">{{ editEntryError }}</p>
+            <p *ngIf="editEntrySuccess" class="message success">{{ editEntrySuccess }}</p>
+
+            <div class="edit-entry-actions">
+              <button type="submit" [disabled]="editEntryLoading">
+                {{ editEntryLoading ? 'Guardando...' : 'Guardar cambios' }}
+              </button>
+
+              <button type="button" class="secondary-button" (click)="cancelEditEntry()" [disabled]="editEntryLoading">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="void-entry-panel" *ngIf="voidingEntryId === entry.id">
+          <h3>Anular fichaje</h3>
+
+          <p class="void-entry-text">
+            Vas a anular el fichaje del
+            <strong>{{ formatDate(entry.startAt) }}</strong>
+            de
+            <strong>{{ formatTime(entry.startAt) }}</strong>
+            a
+            <strong>{{ entry.endAt ? formatTime(entry.endAt) : 'Abierto' }}</strong>.
+          </p>
+
+          <div class="filter-field">
+            <label for="voidReason-{{ entry.id }}">Motivo</label>
+            <textarea id="voidReason-{{ entry.id }}" rows="3" [(ngModel)]="voidReason"
+              placeholder="Ej: Fichaje creado por error"></textarea>
+          </div>
+
+          <p *ngIf="voidEntryError" class="message error">{{ voidEntryError }}</p>
+          <p *ngIf="voidEntrySuccess" class="message success">{{ voidEntrySuccess }}</p>
+
+          <div class="edit-entry-actions">
+            <button type="button" class="danger-button" (click)="submitVoidEntry(entry)" [disabled]="voidEntryLoading">
+              {{ voidEntryLoading ? 'Anulando...' : 'Confirmar anulación' }}
+            </button>
+
+            <button type="button" class="secondary-button" (click)="cancelVoidEntry()" [disabled]="voidEntryLoading">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>

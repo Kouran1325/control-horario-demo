@@ -1,0 +1,27 @@
+<section class="privacy-ack-page">
+  <div class="privacy-ack-card">
+    <h1>Información sobre protección de datos</h1>
+    <p class="subtitle">
+      Antes de continuar, debes leer la información básica sobre el tratamiento de tus datos en la aplicación de
+      control horario.
+    </p>
+
+    <div class="info-box">
+      <p>
+        Tus datos se utilizarán para la gestión del control horario, incluyendo el registro de inicio y fin de
+        jornada y, en su caso, la ubicación asociada al fichaje cuando esta funcionalidad esté habilitada.
+      </p>
+
+      <p>
+        Puedes consultar la información completa en la
+        <a routerLink="/privacy-policy">política de privacidad</a>.
+      </p>
+    </div>
+
+    <p *ngIf="errorMessage" class="message error">{{ errorMessage }}</p>
+
+    <button type="button" (click)="confirmPrivacy()" [disabled]="loading">
+      {{ loading ? 'Confirmando...' : 'He leído la información y deseo continuar' }}
+    </button>
+  </div>
+</section>
