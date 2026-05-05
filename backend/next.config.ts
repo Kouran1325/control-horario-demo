@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            value: 'http://localhost:4200',
+            value: 'https://control-horario-frontend.netlify.app',
           },
           {
             key: 'Access-Control-Allow-Methods',
