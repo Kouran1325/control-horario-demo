@@ -88,15 +88,25 @@ export class ProfilePage implements OnInit {
       return this.selectedAvatarPreview;
     }
 
-    if (!this.currentUser?.avatarUrl) {
+    const avatarUrl = this.currentUser?.avatarUrl;
+
+    if (!avatarUrl) {
       return null;
     }
 
-    if (this.currentUser.avatarUrl.startsWith('http')) {
-      return this.currentUser.avatarUrl;
+    // DEMO:
+    // En producción demo guardamos el avatar como data URL base64 en BD.
+    // PRODUCCIÓN REAL:
+    // Lo ideal sería usar almacenamiento externo y guardar una URL pública.
+    if (avatarUrl.startsWith('data:image/')) {
+      return avatarUrl;
     }
 
-    return `${API_CONFIG.BASE_URL.replace(/\/api$/, '')}${this.currentUser.avatarUrl}`;
+    if (avatarUrl.startsWith('http')) {
+      return avatarUrl;
+    }
+
+    return `${API_CONFIG.BASE_URL.replace(/\/api$/, '')}${avatarUrl}`;
   }
 
   onAvatarSelected(event: Event): void {
