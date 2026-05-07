@@ -34,8 +34,23 @@ export class DashboardPage implements OnInit {
     return this.statusResponse?.openEntry ?? null;
   }
   getAvatarUrl(path?: string | null): string | null {
-    if (!path) return null;
+    if (!path) {
+      return null;
+    }
 
+    // DEMO:
+    // Los avatares pueden venir como data URL base64 guardada en BD.
+    if (path.startsWith('data:image/')) {
+      return path;
+    }
+
+    // PRODUCCIÓN:
+    // Si en el futuro usamos Cloudinary/Supabase/S3, vendrá como URL pública.
+    if (path.startsWith('http')) {
+      return path;
+    }
+
+    // Compatibilidad con avatares antiguos guardados como ruta relativa.
     return `${API_CONFIG.ORIGIN_URL}${path}`;
   }
 

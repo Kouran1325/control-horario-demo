@@ -155,12 +155,23 @@ export class AdminPage implements OnInit {
   }
 
   getAvatarUrl(avatarUrl?: string | null): string {
-    if (!avatarUrl) return '';
+    if (!avatarUrl) {
+      return '';
+    }
 
+    // DEMO:
+    // Los avatares pueden venir como data URL base64 guardada en BD.
+    if (avatarUrl.startsWith('data:image/')) {
+      return avatarUrl;
+    }
+
+    // PRODUCCIÓN:
+    // Si en el futuro usamos Cloudinary/Supabase/S3, vendrá como URL pública.
     if (avatarUrl.startsWith('http')) {
       return avatarUrl;
     }
 
+    // Compatibilidad con avatares antiguos guardados como ruta relativa.
     return `${API_CONFIG.BASE_URL.replace(/\/api$/, '')}${avatarUrl}`;
   }
 
