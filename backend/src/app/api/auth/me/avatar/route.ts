@@ -1,10 +1,8 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
-import crypto from "crypto";
 import sharp from "sharp";
+
 import { userPublicSelect } from "@/lib/selects/user.select";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/auth";
@@ -42,10 +40,7 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: {
-        id: true,
-        avatarUrl: true,
-      },
+      select: { id: true },
     });
 
     if (!user) {
@@ -58,36 +53,34 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const fileName = `${crypto.randomUUID()}.webp`;
-    const relativeUrl = `/uploads/avatars/${fileName}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "avatars");
-    const outputPath = path.join(uploadDir, fileName);
+    /*
+      DEMO:
+      Guardamos el avatar como data URL en base de datos para evitar depender
+      del sistema de archivos de Vercel, que no es persistente.
 
-    await fs.mkdir(uploadDir, { recursive: true });
-
-    await sharp(buffer)
+      PRODUCCIÓN:
+      Sustituir por almacenamiento externo: Cloudinary, Supabase Storage,
+      S3/R2, UploadThing, etc. En ese caso avatarUrl debería guardar
+      la URL pública del archivo.
+    */
+    const processedBuffer = await sharp(buffer)
       .resize(400, 400, {
         fit: "cover",
         position: "centre",
       })
       .webp({ quality: 82 })
-      .toFile(outputPath);
+      .toBuffer();
 
-    if (user.avatarUrl) {
-      const oldPath = path.join(process.cwd(), "public", user.avatarUrl.replace(/^\//, ""));
-      try {
-        await fs.unlink(oldPath);
-      } catch {
-        // Si no existe o falla el borrado, no bloqueamos la subida nueva
-      }
-    }
+    const avatarDataUrl = `data:image/webp;base64,${processedBuffer.toString(
+      "base64"
+    )}`;
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
-        avatarUrl: relativeUrl,
+        avatarUrl: avatarDataUrl,
       },
-      select: userPublicSelect
+      select: userPublicSelect,
     });
 
     return NextResponse.json(
